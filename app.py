@@ -1,5 +1,3 @@
-# Autor: Luan Ferreira
-# Atividade Somativa de DevOps
 import random
 from flask import Flask, jsonify
 
@@ -12,13 +10,15 @@ quotes = [
     "A imaginação é mais importante que o conhecimento. - Albert Einstein",
     "Se você quer viver uma vida feliz, amarre-se a um objetivo, não às pessoas ou às coisas. - Albert Einstein"
 ]
-@app.route("/")
-def home():
-    return "<h1>API de Citações</h1><p>Visite /quote para uma citação aleatória.</p>"
 
 @app.route("/")
 def home():
-    return "<h1>API de Citações Inspiradoras</h1><p>Para usar, acesse a rota /quote.</p>"
+    return "<h1>API de Citações</h1><p>Para obter uma citação aleatória, acesse a rota /quote</p>"
+
+@app.route("/quote")
+def get_quote():
+    random_quote = random.choice(quotes)
+    return jsonify({"citacao": random_quote})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
