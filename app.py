@@ -16,10 +16,9 @@ quotes = [
 def home():
     return "<h1>API de Citações</h1><p>Visite /quote para uma citação aleatória.</p>"
 
-@app.route("/quote")
-def get_random_quote():
-    random_quote = random.choice(quotes)
-    return jsonify(quote=random_quote)
+@app.route("/")
+def home():
+    return "<h1>API de Citações Inspiradoras</h1><p>Para usar, acesse a rota /quote.</p>"
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
