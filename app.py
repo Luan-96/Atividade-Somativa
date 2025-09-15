@@ -1,3 +1,5 @@
+# Autor: Luan Ferreira
+# Atividade Somativa
 import random
 from flask import Flask, jsonify
 
