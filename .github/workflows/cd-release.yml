@@ -1,0 +1,49 @@
+# .github/workflows/cd-release.yml
+
+name: Continuous Delivery - Create Release
+
+# Gatilho: roda apenas quando uma nova tag no formato v*.*.* for criada
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Clona o repositório
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Empacota o código-fonte em um arquivo zip
+      # Exclui arquivos desnecessários como .git e os próprios workflows
+      - name: Build Project Artifact
+        run: zip release.zip app.py requirements.txt -r
+
+      # 3. Cria a Release no GitHub
+      # Usa uma Action pronta da comunidade para facilitar o processo
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Token automático, não precisa criar
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: |
+            Nova versão da API de Citações.
+          draft: false
+          prerelease: false
+
+      # 4. Envia o artefato (arquivo .zip) para a Release criada
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./release.zip
+          asset_name: codigo-fonte.zip
+          asset_content_type: application/zip
