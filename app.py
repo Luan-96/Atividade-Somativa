@@ -1,5 +1,5 @@
 # Autor: Luan Ferreira
-# Atividade Somativa
+# Atividade Somativa de DevOps
 import random
 from flask import Flask, jsonify
 
