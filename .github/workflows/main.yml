@@ -67,7 +67,7 @@ jobs:
       - name: Send Discord Notification
         uses: tsickert/discord-webhook@v5.3.0
         with:
-          webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          webhook_url: ${{ secrets.DISCORD_WEBHOOK }}
           content: "Execução do pipeline finalizada!"
           embed: |
             {
