@@ -1,4 +1,4 @@
-from src import app, quotes
+from src.app import app, quotes
 
 # Teste 1: Verifica se a página inicial está funcionando (Status Code)
 def test_home_status_code():
