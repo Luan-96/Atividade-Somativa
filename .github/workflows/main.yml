@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: CI-CD Pipeline with Docker and Notifications
 
 on:
   push:
@@ -6,10 +6,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build_and_test:
     name: Build and Test
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -20,41 +19,59 @@ jobs:
           python-version: '3.10'
 
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+        run: pip install -r requirements.txt
 
       - name: Test with Pytest
         run: pytest
 
-      - name: Package application
-        run: zip release.zip app.py requirements.txt
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: package
-          path: release.zip
-
-  deploy:
-    name: Deploy to GitHub Releases
+  push_to_registry:
+    name: Build and Push Docker Image
     runs-on: ubuntu-latest
-
-    needs: build
-
+    needs: build_and_test
     permissions:
-      contents: write
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+# Notificação Discord
+  notify_discord:
+    name: Notify Discord
+    runs-on: ubuntu-latest
+    needs: [build_and_test, push_to_registry]
+    if: always()
 
     steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v4
+      - name: Send Discord Notification
+        uses: tsickert/discord-webhook@v5.3.0
         with:
-          name: package
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: release-${{ github.run_number }}
-          files: release.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK }}
+          content: "Execução do Workflows finalizadas!"
+          embed-title: "Status dos Workflows: ${{ needs.push_to_registry.result == 'success' && 'Sucesso' || 'Falha' }}"
+          embed-description: "Commit por **${{ github.actor }}**: `${{ github.event.head_commit.message }}`"
+          embed-url: "${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
+          embed-color: "${{ needs.push_to_registry.result == 'success' && '65280' || '16711680' }}"
+          embed-author-name: "${{ github.repository }}"
+          embed-author-url: "${{ github.server_url }}/${{ github.repository }}"
