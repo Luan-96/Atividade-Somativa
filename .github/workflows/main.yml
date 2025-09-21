@@ -3,10 +3,8 @@ name: CI-CD Pipeline with Docker and Notifications
 on:
   push:
     branches: [ "main" ]
-
   pull_request:
     branches: [ "main" ]
-
   workflow_dispatch:
 
 jobs:
@@ -26,6 +24,8 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Test with Pytest
+        env:
+          PYTHONPATH: .
         run: pytest
 
   push_to_registry:
@@ -72,7 +72,7 @@ jobs:
         uses: tsickert/discord-webhook@v5.3.0
         with:
           webhook-url: ${{ secrets.DISCORD_WEBHOOK }}
-          content: "Execução do Workflows finalizadas!"
+          content: "Execução do Workflows finalizada!"
           embed-title: "Status dos Workflows: ${{ needs.push_to_registry.result == 'success' && 'Sucesso' || 'Falha' }}"
           embed-description: "Commit por **${{ github.actor }}**: `${{ github.event.head_commit.message }}`"
           embed-url: "${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
