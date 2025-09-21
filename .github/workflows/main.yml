@@ -3,6 +3,10 @@ name: CI-CD Pipeline with Docker and Notifications
 on:
   push:
     branches: [ "main" ]
+
+  pull_request:
+    branches: [ "main" ]
+
   workflow_dispatch:
 
 jobs:
